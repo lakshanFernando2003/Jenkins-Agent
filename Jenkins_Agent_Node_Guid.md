@@ -21,25 +21,21 @@ Before starting, gather all required network details, SSH credentials, and conta
 #### Steps to Collect Information
 
 1. **Find the container IP address**
-
    Used to verify internal networking and confirm Jenkins master’s reachable interface.
 
 2. **Check the host network interfaces**
-
    Run the below command on the host (srv-08) to identify which interface/IP is reachable from the agent server.
 
 3. **List available SSH keys**
-
-   Check that the required private and public key files exist in Jenkins’ `.ssh` directory
+   Check that the required private and public key files exist in Jenkins’ `.ssh` directory.
 
 4. **Display the Jenkins master public key**
-
    You will need this key to authorize access on the agent container.
    Copy this output later into the agent’s `authorized_keys`.
 
 ---
 
-### 🧩 Jenkins Agent (`srv-04`)
+### Jenkins Agent (`srv-04`)
 
 **Container:** `unit_test_container_4`
 **Purpose:** This container runs build/test workloads triggered by the Jenkins master.
@@ -49,33 +45,26 @@ If you have **not yet created the agent container**, refer to the next section �
 #### Steps to Collect Information
 
 1. **Find the container IP address**
-
    This confirms the container’s internal network IP.
 
 2. **Confirm the container is running**
-
    Ensures the container is active and healthy.
 
 3. **Check port mappings**
 
-   * Show SSH port mapping between host and container:
-
-   * Show PostgreSQL port mapping (optional)
+   * Show SSH port mapping between host and container.
+   * Show PostgreSQL port mapping (optional).
 
 4. **Display network interfaces on host (srv-04)**
-
-   To confirm host accessibility from srv-08
+   To confirm host accessibility from srv-08.
 
 5. **Check active user inside container**
 
 6. **Create Jenkins user and `.ssh` directory**
-
-   If not already present, create the `jenkins` user inside `/home`, then set up the `.ssh` folder:
-
+   If not already present, create the `jenkins` user inside `/home`, then set up the `.ssh` folder.
    This ensures correct ownership and permissions for SSH authentication.
 
 7. **Verify authorized SSH keys file**
-
    If `/home/jenkins/.ssh/authorized_keys` does not exist, it will be created in the next step.
 
 ---
@@ -244,7 +233,7 @@ Now we configure secure SSH-based communication between Jenkins master and agent
 
 If the SSH directory or key files are missing, follow these steps.
 
-1. **Create `.ssh` directory and set permissions**:
+1. **Create `.ssh` directory and set permissions:**
 
    ```bash
    docker exec -it unit_test_container_4 bash -c 'mkdir -p /home/jenkins/.ssh && chmod 700 /home/jenkins/.ssh'
@@ -292,6 +281,60 @@ nc -vz MASTER_IP 22
 ✅ **Expected Output:**
 `OK` — confirms SSH key-based connection is successful.
 
+---
+
+### **Passwordless SSH Login Troubleshooting**
+
+If passwordless SSH connection fails (e.g., Jenkins GUI cannot connect but CLI works), check the following:
+
+1. **File Ownership and Permissions**
+
+   ```bash
+   ls -l /home/jenkins/.ssh/
+   ```
+
+   Ensure:
+
+   * Owner is `jenkins:jenkins`
+   * `.ssh` directory permission: `700`
+   * `authorized_keys` file permission: `600`
+
+2. **Verify Correct Key Placement**
+
+   * Master’s **public key** must be inside `/home/jenkins/.ssh/authorized_keys` on the agent.
+   * Jenkins master must use the **private key** (`/var/jenkins_home/.ssh/jenkins_agent_key`).
+
+3. **Check SSH Service Inside Agent**
+
+   ```bash
+   docker exec -it unit_test_container_4 service ssh status
+   ```
+
+   Restart if needed:
+
+   ```bash
+   docker exec -it unit_test_container_4 service ssh restart
+   ```
+
+4. **Known Hosts Permissions (if applicable)**
+
+   * If you previously allowed Jenkins to write to `/var/jenkins_home/.ssh/known_hosts`, ensure ownership is set back to `root:root` and permissions are `644` after successful verification.
+
+   ```bash
+   chown root:root /var/jenkins_home/.ssh/known_hosts
+   chmod 644 /var/jenkins_home/.ssh/known_hosts
+   ```
+
+5. **Test Direct SSH Access Again**
+
+   ```bash
+   ssh -i /var/jenkins_home/.ssh/jenkins_agent_key -p 2224 jenkins@AGENT_IP
+   ```
+
+   If the prompt logs in without password → setup is correct.
+
+---
+
 ## **Add Jenkins SSH Credentials**
 
 Before linking the agent node, you must store the SSH private key in Jenkins credentials.
@@ -306,7 +349,7 @@ Before linking the agent node, you must store the SSH private key in Jenkins cre
    * **Private Key:**
 
      * Select **Enter directly**
-     * Paste the entire content of the master’s private key file:
+     * Paste the content of the master’s private key file:
 
        ```bash
        cat /var/jenkins_home/.ssh/jenkins_agent_key
@@ -315,9 +358,7 @@ Before linking the agent node, you must store the SSH private key in Jenkins cre
    * **Description:** `SSH key for Jenkins Agent (unit_test_container_4)`
 4. Click **Create**
 
-Once done, use this credential when configuring the node connection
-
----
+Once done, use this credential when configuring the node connection.
 
 ---
 
