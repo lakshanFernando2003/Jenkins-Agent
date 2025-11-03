@@ -109,7 +109,7 @@ The agent image should include the following:
 3. **Add the Dockerfile content**
 
    ```
-   # link: add the GitHub link to Dockerfile
+   # link: https://github.com/lakshanFernando2003/Jenkins-Agent.git
    ```
 
 4. **Build the image**
