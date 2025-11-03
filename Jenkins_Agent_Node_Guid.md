@@ -292,7 +292,7 @@ nc -vz MASTER_IP 22
 ✅ **Expected Output:**
 `OK` — confirms SSH key-based connection is successful.
 
-## ** Add Jenkins SSH Credentials**
+## **Add Jenkins SSH Credentials**
 
 Before linking the agent node, you must store the SSH private key in Jenkins credentials.
 
@@ -321,7 +321,7 @@ Once done, use this credential when configuring the node connection
 
 ---
 
-## ** Add Jenkins Node via GUI**
+## **Add Jenkins Node via GUI**
 
 1. Navigate to **Manage Jenkins → Manage Nodes → New Node**
 2. Enter node name: `unit_test_container_4`
